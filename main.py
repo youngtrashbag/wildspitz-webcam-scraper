@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from scraper.file import create_folders, save_image
-from scraper.time import normalize_minute
 from scraper.request import create_url, get_image
+from scraper.time import normalize_minute
 
 
 def main():

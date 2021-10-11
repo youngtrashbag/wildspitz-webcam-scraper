@@ -17,6 +17,7 @@ def create_url(dt: datetime):
 
     return full_url
 
+
 def get_image(url: str) -> Optional[Response]:
     res = get(url, stream=True)
 

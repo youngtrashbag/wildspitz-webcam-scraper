@@ -1,6 +1,6 @@
+from datetime import datetime
 from os import makedirs
 from pathlib import Path
-from datetime import datetime
 from shutil import copyfileobj
 
 from requests import Response
