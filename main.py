@@ -12,7 +12,7 @@ def main():
 
     url = create_url(now)
 
-    if res := get_image(url) is not None:
+    if (res := get_image(url)) is not None:
         path = create_folders(now)
 
         save_image(res, path, now.minute)
