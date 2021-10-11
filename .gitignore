@@ -1,0 +1,10 @@
+# python env
+.env
+.venv
+
+# pycharm
+.idea
+
+# image folders
+202*-*/
+
