@@ -8,8 +8,8 @@ from requests import get, Response
 # https://storage.roundshot.com/5595515f75aba9.83008277/2021-10-11/10-10-00/2021-10-11-10-10-00_full.jpg
 def create_url(dt: datetime):
     pre_url = "https://storage.roundshot.com/5595515f75aba9.83008277"
-    date_fragment = f"{dt.year}-{dt.month}-{dt.day}"
-    time_fragment = f"{dt.hour}-{dt.minute}-00"
+    date_fragment = f"{dt.year}-{dt.month:02}-{dt.day:02}"
+    time_fragment = f"{dt.hour:02}-{dt.minute:02}-00"
 
     # stitching the url together
     # of course, we also want the highest resolution
