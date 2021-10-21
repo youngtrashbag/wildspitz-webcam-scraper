@@ -2,38 +2,39 @@ from datetime import datetime
 
 from scraper.file import create_folders, save_image
 from scraper.request import create_url, get_image
-from scraper.time import normalize_minute
+from scraper.time import normalize_minute, advance_minute
 
 from arg_parser import init_parser
 
 
 def main():
     # argument parsing
-    init_parser()
+    start, end, interval = init_parser()
 
-    now = datetime.now()
-    now = normalize_minute(now)
+    if start is None:
+        start = datetime.now()
 
-    url = create_url(now)
+    if end is None:
+        end = datetime.now()
 
-    if (res := get_image(url)) is not None:
-        path = create_folders(now)
-
-        save_image(res, path, now.minute)
+    if interval is not None:
+        interval = interval * 10
     else:
-        print("Latest Image could not be fetched.\nTrying last Image.")
+        interval = 10
 
-        if now.minute - 10 < 0:
-            now = now.replace(minute=50)
+    start = normalize_minute(start)
+
+    url = create_url(start)
+
+    while start < end:
+        if (res := get_image(url)) is not None:
+            path = create_folders(start)
+
+            save_image(res, path, start.minute)
         else:
-            now = now.replace(minute=now.minute - 10)
+            print(f"Image from {start} could not be fetched.\nTrying last Image.")
 
-        url = create_url(now)
-
-        res = get_image(url)
-
-        path = create_folders(now)
-        save_image(res, path, now.minute)
+        start = advance_minute(start, interval)
 
 
 if __name__ == "__main__":

@@ -16,8 +16,20 @@ parser.add_argument("-e", "--end",
                     metavar="YYYY-MM-DD_hh-mm",
                     help="The DateTime where scraper should end")
 
+parser.add_argument("-i", "--interval",
+                    type=int,
+                    metavar="1",
+                    help="The Interval in which images should be fetched (1 -> every 10 minutes)")
+
 
 def init_parser() -> (Optional[datetime], Optional[datetime], Optional[int]):
+    """
+    Will initialize argument parser, validate and initialize the values passed
+    Start Time: first image to be saved
+    End Time: last image to be saved
+    Interval: the interval in which images should be requested, (1 -> every 10 minutes)
+    :return: Tuple of (start_time, end_time, interval)
+    """
     args = parser.parse_args()
 
     time_format = "%Y-%m-%d_%H-%M"
@@ -25,6 +37,7 @@ def init_parser() -> (Optional[datetime], Optional[datetime], Optional[int]):
     # if no other start or end time is specified, use time now
     start = None
     end = None
+    interval = 1
 
     if args.start is not None:
         try:
@@ -38,5 +51,11 @@ def init_parser() -> (Optional[datetime], Optional[datetime], Optional[int]):
         except ValueError:
             print("End parameter did not contain correct date format")
 
+    if args.interval is not None:
+        try:
+            interval = int(args.interval)
+        except ValueError:
+            print("Interval parameter is invalid")
+
     # start time, end time, interval
-    return (start, end, None)
+    return (start, end, interval)
