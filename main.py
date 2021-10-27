@@ -14,7 +14,9 @@ Options:
 -e, --end             First image you want to download (YYYY-MM-DD_hh-mm)
 -i, --interval        Interval in ten minute steps (1 -> 10 min)
 """
+import sys
 from datetime import datetime
+
 from docopt import docopt
 
 from scraper.file import create_folders, save_image
@@ -33,18 +35,18 @@ def main():
 
     if args["--begin"]:
         try:
-            start = datetime.strptime(args["--begin"], time_format)
+            start = datetime.strptime(args["BEGIN"], time_format)
         except ValueError:
             print("Start parameter did not contain correct date format")
 
     if args["--end"]:
         try:
-            end = datetime.strptime(args["--end"], time_format)
+            end = datetime.strptime(args["END"], time_format)
         except ValueError:
             print("End parameter did not contain correct date format")
 
     if args["--interval"]:
-        interval = int(args["--interval"]) * 10
+        interval = int(args["INTERVAL"]) * 10
 
     start = normalize_minute(start)
 
@@ -55,9 +57,10 @@ def main():
             path = create_folders(start)
 
             print(f"Saving Image from {start} under {path}.")
-            save_image(res, path, start.minute)
+            save_image(res, path, start)
         else:
             print(f"Could not save Image from {start}.")
+            sys.exit()
 
         start = advance_minute(start, interval)
 
