@@ -1,26 +1,50 @@
+"""
+Wildspitz Webcam Scraper
+
+Usage:
+    scraper.py
+    scraper.py [-b BEGIN]
+    scraper.py [-b BEGIN -e END]
+    scraper.py [-b BEGIN -e END -i INTERVAL]
+
+Options:
+-h, --help            help
+
+-b, --begin           First image you want to download (YYYY-MM-DD_hh-mm)
+-e, --end             First image you want to download (YYYY-MM-DD_hh-mm)
+-i, --interval        Interval in ten minute steps (1 -> 10 min)
+"""
 from datetime import datetime
+from docopt import docopt
 
 from scraper.file import create_folders, save_image
 from scraper.request import create_url, get_image
 from scraper.time import normalize_minute, advance_minute
 
-from arg_parser import init_parser
-
 
 def main():
     # argument parsing
-    start, end, interval = init_parser()
+    args = docopt(__doc__, help=True)
+    time_format = "%Y-%m-%d_%H-%M"
 
-    if start is None:
-        start = datetime.now()
+    start = datetime.now()
+    end = datetime.now()
+    interval = 10
 
-    if end is None:
-        end = datetime.now()
+    if args["--begin"]:
+        try:
+            start = datetime.strptime(args["--begin"], time_format)
+        except ValueError:
+            print("Start parameter did not contain correct date format")
 
-    if interval is not None:
-        interval = interval * 10
-    else:
-        interval = 10
+    if args["--end"]:
+        try:
+            end = datetime.strptime(args["--end"], time_format)
+        except ValueError:
+            print("End parameter did not contain correct date format")
+
+    if args["--interval"]:
+        interval = int(args["--interval"]) * 10
 
     start = normalize_minute(start)
 
@@ -30,9 +54,10 @@ def main():
         if (res := get_image(url)) is not None:
             path = create_folders(start)
 
+            print(f"Saving Image from {start} under {path}.")
             save_image(res, path, start.minute)
         else:
-            print(f"Image from {start} could not be fetched.\nTrying last Image.")
+            print(f"Could not save Image from {start}.")
 
         start = advance_minute(start, interval)
 
