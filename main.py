@@ -50,9 +50,9 @@ def main():
 
     start = normalize_minute(start)
 
-    url = create_url(start)
-
     while start < end:
+        url = create_url(start)
+
         if (res := get_image(url)) is not None:
             path = create_folders(start)
 
