@@ -13,8 +13,8 @@ def create_folders(dt: datetime) -> Path:
     return p
 
 
-def save_image(res: Response, path: Path, minute):
-    img_path = Path(path / f"{minute}.jpg")
+def save_image(res: Response, path: Path, dt: datetime):
+    img_path = Path(path / f"{dt.hour}-{dt.minute}.jpg")
 
     with open(img_path, mode="wb") as img:
         copyfileobj(res.raw, img)
