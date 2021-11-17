@@ -1,13 +1,16 @@
-from datetime import datetime
-from typing import Optional
+from threading import Thread
 
-from requests import get, Response
+from requests import get
+
+from datetime import datetime
+from os import makedirs
+from pathlib import Path
+from shutil import copyfileobj
 
 
 # url is formatted as follows
 # https://storage.roundshot.com/5595515f75aba9.83008277/2021-10-11/10-10-00/2021-10-11-10-10-00_full.jpg
-def create_url(dt: datetime):
-    pre_url = 'https://storage.roundshot.com/5595515f75aba9.83008277'
+def create_url(pre_url: str, dt: datetime):
     date_fragment = f'{dt.year}-{dt.month:02}-{dt.day:02}'
     time_fragment = f'{dt.hour:02}-{dt.minute:02}-00'
 
@@ -18,10 +21,28 @@ def create_url(dt: datetime):
     return full_url
 
 
-def get_image(url: str) -> Optional[Response]:
-    res = get(url, stream=True)
+class ThreadedFetcher(Thread):
+    def __init__(self, url: str, time: datetime):
+        Thread.__init__(self, name='ThreadedFetcher')
+        self.time = time
+        self.url = url
 
-    if res.status_code != 200:
-        return None
+    def run(self) -> None:
+        path = Path(f'{self.time.year}-{self.time.month}') / Path(str(self.time.day))
+        makedirs(path, exist_ok=True)
 
-    return res
+        try:
+            response = get(self.url, stream=True)
+
+            if response.status_code != 200:
+                raise BaseException('HTTP status not 200')
+
+            print(f'Saving Image from {self.time} under {path}.')
+            img_path = Path(path / f'{self.time.hour}-{self.time.minute}.jpg')
+
+            with open(img_path, mode="wb") as img:
+                copyfileobj(response.raw, img)
+
+            print(f'Successfully saved Image in \'{img_path}\'.')
+        except Exception as e:
+            print(f'Could not save Image from {self.time}.\n{e}')
