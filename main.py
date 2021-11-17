@@ -38,7 +38,8 @@ def main():
             if len(args['BEGIN']) > 5:
                 start = datetime.strptime(args['BEGIN'], time_format)
             else:
-                start = datetime.strptime(args['BEGIN'], short_time_format)
+                new_time = datetime.strptime(args['BEGIN'], short_time_format)
+                start = start.replace(hour=new_time.hour, minute=new_time.minute)
         except ValueError:
             print('Start parameter did not contain correct date format')
 
@@ -47,7 +48,8 @@ def main():
             if len(args['END']) > 5:
                 start = datetime.strptime(args['END'], time_format)
             else:
-                start = datetime.strptime(args['END'], short_time_format)
+                new_time = datetime.strptime(args['END'], short_time_format)
+                end = end.replace(hour=new_time.hour, minute=new_time.minute)
         except ValueError:
             print('End parameter did not contain correct date format')
 
