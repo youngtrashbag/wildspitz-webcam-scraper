@@ -34,11 +34,8 @@ class ThreadedFetcher(Thread):
         try:
             response = get(self.url, stream=True)
 
-            if response.status_code != 200:
-                raise BaseException('HTTP status not 200')
-
             print(f'Saving Image from {self.time} under {path}.')
-            img_path = Path(path / f'{self.time.hour}-{self.time.minute}.jpg')
+            img_path = path / Path(f'{self.time.hour:02}-{self.time.minute:02}.jpg')
 
             with open(img_path, mode="wb") as img:
                 copyfileobj(response.raw, img)

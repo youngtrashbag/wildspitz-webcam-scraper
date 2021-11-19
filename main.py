@@ -17,6 +17,7 @@ Options:
 -e, --end             Last image you want to download (hh-mm) or (YYYY-MM-DD_hh-mm)
 -i, --interval        Interval in minute steps (min. 10 min, and can only be increased in 10 min steps)
 """
+from typing import List
 from datetime import datetime, timedelta
 
 from docopt import docopt
@@ -49,6 +50,8 @@ def main():
             else:
                 new_time = datetime.strptime(args['BEGIN'], short_time_format)
                 start_time = start_time.replace(hour=new_time.hour, minute=new_time.minute)
+                # should by default only download one image
+                end_time = start_time
         except ValueError:
             print('Start parameter did not contain correct date format')
 
@@ -82,9 +85,17 @@ def main():
         second=0,
         microsecond=0)
 
+    # max 3 threads at a time
+    active_threads: List = []
     while start_time < end_time:
-        ThreadedFetcher(create_url(webcam_link, start_time), start_time).start()
-        start_time += timedelta(minutes=interval)
+        if len(active_threads) < 3:
+            t = ThreadedFetcher(create_url(webcam_link, start_time), start_time)
+            t.start()
+            start_time += timedelta(minutes=interval)
+            active_threads.append(t)
+        else:
+            active_threads[0].join()
+            active_threads.pop(0)
 
 
 if __name__ == '__main__':
