@@ -20,6 +20,8 @@ Options:
 -e, --end             Last image you want to download (hh-mm) or (YYYY-MM-DD_hh-mm)
 -i, --interval        Interval in minute steps (min. 10 min, and can only be increased in 10 min steps)
 """
+import os
+import json
 from typing import List
 from datetime import datetime, timedelta
 
@@ -28,10 +30,14 @@ from docopt import docopt
 from scraper.request import create_url, ThreadedFetcher
 
 
-WEBCAMS = {
-    'wildspitz': 'https://storage.roundshot.com/5595515f75aba9.83008277',
-    'rigi': 'https://storage.roundshot.com/5c1a1db365b684.49402499'
-}
+curr_dir_path = os.path.dirname(os.path.abspath(__file__))
+
+# WEBCAMS = {
+#     'wildspitz': 'https://storage.roundshot.com/5595515f75aba9.83008277',
+#     'rigi': 'https://storage.roundshot.com/5c1a1db365b684.49402499',
+# }
+with open(os.path.join(curr_dir_path, 'webcams.json'), "r") as webcam_json:
+    WEBCAMS = json.load(webcam_json)
 
 QUALITIES = ['full', 'default', 'half', 'quarter', 'eight']
 
@@ -55,7 +61,9 @@ def main():
                 start_time = datetime.strptime(args['BEGIN'], time_format)
             else:
                 new_time = datetime.strptime(args['BEGIN'], short_time_format)
-                start_time = start_time.replace(hour=new_time.hour, minute=new_time.minute)
+                start_time = start_time.replace(
+                    hour=new_time.hour, minute=new_time.minute
+                )
                 # should by default only download one image
                 end_time = start_time
         except ValueError:
@@ -93,15 +101,16 @@ def main():
             quality = str(args['QUALITY'])
 
     start_time = start_time.replace(
-        minute=start_time.minute - (start_time.minute % 10),
-        second=0,
-        microsecond=0)
+        minute=start_time.minute - (start_time.minute % 10), second=0, microsecond=0
+    )
 
     # max 3 threads at a time
     active_threads: List = []
     while start_time < end_time:
         if len(active_threads) < 3:
-            t = ThreadedFetcher(create_url(webcam_link, start_time, quality), start_time, webcam_name)
+            t = ThreadedFetcher(
+                create_url(webcam_link, start_time, quality), start_time, webcam_name
+            )
             t.start()
             start_time += timedelta(minutes=interval)
             active_threads.append(t)
