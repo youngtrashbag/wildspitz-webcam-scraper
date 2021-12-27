@@ -1,69 +1,123 @@
 """
-Wildspitz Webcam Scraper
+Webcam Scraper
 
 Usage:
     scraper.py
+    scraper.py [-w WEBCAM]
+    scraper.py [-q QUALITY]
     scraper.py [-b BEGIN]
     scraper.py [-b BEGIN -e END]
     scraper.py [-b BEGIN -e END -i INTERVAL]
+    scraper.py [-w WEBCAM -q QUALITY -b BEGIN -e END -i INTERVAL]
 
 Options:
 -h, --help            help
 
--b, --begin           First image you want to download (YYYY-MM-DD_hh-mm)
--e, --end             First image you want to download (YYYY-MM-DD_hh-mm)
--i, --interval        Interval in ten minute steps (1 -> 10 min)
+-w, --webcam          Select either 'wildspitz' or 'rigi' webcam
+-q, --quality         Quality of the Image (full, default, half, quarter, eight)
+
+-b, --begin           First image you want to download (hh-mm) or (YYYY-MM-DD_hh-mm)
+-e, --end             Last image you want to download (hh-mm) or (YYYY-MM-DD_hh-mm)
+-i, --interval        Interval in minute steps (min. 10 min, and can only be increased in 10 min steps)
 """
-import sys
-from datetime import datetime
+import os
+import json
+from typing import List
+from datetime import datetime, timedelta
 
 from docopt import docopt
 
-from scraper.file import create_folders, save_image
-from scraper.request import create_url, get_image
-from scraper.time import normalize_minute, advance_minute
+from scraper.request import create_url, ThreadedFetcher
+
+
+curr_dir_path = os.path.dirname(os.path.abspath(__file__))
+
+# WEBCAMS = {
+#     'wildspitz': 'https://storage.roundshot.com/5595515f75aba9.83008277',
+#     'rigi': 'https://storage.roundshot.com/5c1a1db365b684.49402499',
+# }
+with open(os.path.join(curr_dir_path, 'webcams.json'), 'r') as webcam_json:
+    WEBCAMS = json.load(webcam_json)
+
+QUALITIES = ['full', 'default', 'half', 'quarter', 'eight']
 
 
 def main():
     # argument parsing
     args = docopt(__doc__, help=True)
-    time_format = "%Y-%m-%d_%H-%M"
+    short_time_format = '%H-%M'
+    time_format = '%Y-%m-%d_%H-%M'
 
-    start = datetime.now()
-    end = datetime.now()
+    # settings default values
+    start_time = datetime.now()
+    end_time = datetime.now()
     interval = 10
+    webcam_link = WEBCAMS['wildspitz']
+    webcam_name = 'wildspitz'
 
-    if args["--begin"]:
+    if args['--begin']:
         try:
-            start = datetime.strptime(args["BEGIN"], time_format)
+            if len(args['BEGIN']) > 5:
+                start_time = datetime.strptime(args['BEGIN'], time_format)
+            else:
+                new_time = datetime.strptime(args['BEGIN'], short_time_format)
+                start_time = start_time.replace(
+                    hour=new_time.hour, minute=new_time.minute
+                )
+                # should by default only download one image
+                end_time = start_time
         except ValueError:
-            print("Start parameter did not contain correct date format")
+            print('Start parameter did not contain correct date format')
 
-    if args["--end"]:
+    if args['--end']:
         try:
-            end = datetime.strptime(args["END"], time_format)
+            if len(args['END']) > 5:
+                start_time = datetime.strptime(args['END'], time_format)
+            else:
+                new_time = datetime.strptime(args['END'], short_time_format)
+                end_time = end_time.replace(hour=new_time.hour, minute=new_time.minute)
         except ValueError:
-            print("End parameter did not contain correct date format")
+            print('End parameter did not contain correct date format')
 
-    if args["--interval"]:
-        interval = int(args["INTERVAL"]) * 10
+    if args['--interval']:
+        interval = int(args['INTERVAL'])
+        if interval == 0:
+            raise ValueError('Interval must at least be 10 minutes')
+        elif interval % 10 > 0:
+            raise ValueError('Interval can only be a value divisible by 10')
 
-    start = normalize_minute(start)
+    if args['--webcam']:
+        webcam_name = str(args['WEBCAM']).lower()
 
-    while start < end:
-        url = create_url(start)
+        if webcam_name not in WEBCAMS:
+            raise ValueError('No valid Webcam was selected')
 
-        if (res := get_image(url)) is not None:
-            path = create_folders(start)
+        webcam_link = WEBCAMS[webcam_name]
 
-            print(f"Saving Image from {start} under {path}.")
-            save_image(res, path, start)
+    # default quality is 'default'
+    quality = QUALITIES[1]
+    if args['--quality']:
+        if str(args['QUALITY']) in QUALITIES:
+            quality = str(args['QUALITY'])
+
+    start_time = start_time.replace(
+        minute=start_time.minute - (start_time.minute % 10), second=0, microsecond=0
+    )
+
+    # max 3 threads at a time
+    active_threads: List = []
+    while start_time < end_time:
+        if len(active_threads) < 3:
+            t = ThreadedFetcher(
+                create_url(webcam_link, start_time, quality), start_time, webcam_name
+            )
+            t.start()
+            start_time += timedelta(minutes=interval)
+            active_threads.append(t)
         else:
-            print(f"Could not save Image from {start}.")
-            sys.exit()
-
-        start = advance_minute(start, interval)
+            active_threads[0].join()
+            active_threads.pop(0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
