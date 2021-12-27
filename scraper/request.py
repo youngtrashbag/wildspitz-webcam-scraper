@@ -29,7 +29,9 @@ class ThreadedFetcher(Thread):
         self.webcam = webcam
 
     def run(self) -> None:
-        path = Path(f'{self.time.year}-{self.time.month}') / Path(str(self.time.day) / Path(self.webcam))
+        path = Path(f'{self.time.year}-{self.time.month}') / Path(
+            str(self.time.day) / Path(self.webcam)
+        )
         makedirs(path, exist_ok=True)
 
         try:

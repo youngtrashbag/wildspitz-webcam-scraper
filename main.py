@@ -30,7 +30,7 @@ from scraper.request import create_url, ThreadedFetcher
 
 WEBCAMS = {
     'wildspitz': 'https://storage.roundshot.com/5595515f75aba9.83008277',
-    'rigi': 'https://storage.roundshot.com/5c1a1db365b684.49402499'
+    'rigi': 'https://storage.roundshot.com/5c1a1db365b684.49402499',
 }
 
 QUALITIES = ['full', 'default', 'half', 'quarter', 'eight']
@@ -55,7 +55,9 @@ def main():
                 start_time = datetime.strptime(args['BEGIN'], time_format)
             else:
                 new_time = datetime.strptime(args['BEGIN'], short_time_format)
-                start_time = start_time.replace(hour=new_time.hour, minute=new_time.minute)
+                start_time = start_time.replace(
+                    hour=new_time.hour, minute=new_time.minute
+                )
                 # should by default only download one image
                 end_time = start_time
         except ValueError:
@@ -93,15 +95,16 @@ def main():
             quality = str(args['QUALITY'])
 
     start_time = start_time.replace(
-        minute=start_time.minute - (start_time.minute % 10),
-        second=0,
-        microsecond=0)
+        minute=start_time.minute - (start_time.minute % 10), second=0, microsecond=0
+    )
 
     # max 3 threads at a time
     active_threads: List = []
     while start_time < end_time:
         if len(active_threads) < 3:
-            t = ThreadedFetcher(create_url(webcam_link, start_time, quality), start_time, webcam_name)
+            t = ThreadedFetcher(
+                create_url(webcam_link, start_time, quality), start_time, webcam_name
+            )
             t.start()
             start_time += timedelta(minutes=interval)
             active_threads.append(t)
