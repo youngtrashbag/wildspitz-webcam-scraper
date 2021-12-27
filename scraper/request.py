@@ -46,22 +46,24 @@ class ThreadedFetcher(Thread):
         try:
             img_path = path / Path(f'{self.time.hour:02}-{self.time.minute:02}.jpg')
             if os.path.exists(img_path):
-                print("Skip {} (Already existed)".format(img_path))
+                print('Skip {} (Already existed)'.format(img_path))
             else:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
-                }
+                headers = dict()
+                headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                headers['User-Agent'] += 'AppleWebKit/537.36 (KHTML, like Gecko) '
+                headers['User-Agent'] += 'Chrome/96.0.4664.110 Safari/537.36'
+
                 response = get(self.url, stream=True, headers=headers)
                 if response.status_code == 200:
                     print(f'Saving Image from {self.time} under {path}.')
 
-                    with open(img_path, mode="wb") as img:
+                    with open(img_path, mode='wb') as img:
                         copyfileobj(response.raw, img)
 
                     print(f'Successfully saved Image in \'{img_path}\'.')
                 else:
                     print(
-                        "Skip {} (status code: {})".format(
+                        'Skip {} (status code: {})'.format(
                             self.url, response.status_code
                         )
                     )

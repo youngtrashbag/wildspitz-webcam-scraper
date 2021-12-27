@@ -36,7 +36,7 @@ curr_dir_path = os.path.dirname(os.path.abspath(__file__))
 #     'wildspitz': 'https://storage.roundshot.com/5595515f75aba9.83008277',
 #     'rigi': 'https://storage.roundshot.com/5c1a1db365b684.49402499',
 # }
-with open(os.path.join(curr_dir_path, 'webcams.json'), "r") as webcam_json:
+with open(os.path.join(curr_dir_path, 'webcams.json'), 'r') as webcam_json:
     WEBCAMS = json.load(webcam_json)
 
 QUALITIES = ['full', 'default', 'half', 'quarter', 'eight']
