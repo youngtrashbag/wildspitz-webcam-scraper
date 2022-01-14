@@ -26,7 +26,7 @@ class ThreadedFetcher(Thread):
         self.time = time
         self.url = url
         self.webcam = webcam
-        self.quality = (self.url).split('/')[-1].split('_')[-1].split('.')[0]
+        self.quality = self.url.split('/')[-1].split('_')[-1].split('.')[0]
 
     def run(self) -> None:
         # path = Path(f'{self.time.year}-{self.time.month}') / Path(
@@ -60,11 +60,12 @@ class ThreadedFetcher(Thread):
                     with open(img_path, mode='wb') as img:
                         copyfileobj(response.raw, img)
 
-                    print(f'Successfully saved Image in \'{img_path}\'.')
+                    print(f'Successfully saved Image as \'{img_path}\'.')
                 else:
                     print(
-                        'Skip {} (status code: {})'.format(
-                            self.url, response.status_code
+                        'Could not fetch {} (status code: {})'.format(
+                            self.url,
+                            response.status_code
                         )
                     )
                 # avoid frequent request
