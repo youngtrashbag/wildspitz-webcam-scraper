@@ -20,22 +20,13 @@ Options:
 -e, --end             Last image you want to download (hh-mm) or (YYYY-MM-DD_hh-mm)
 -i, --interval        Interval in minute steps (min. 10 min, and can only be increased in 10 min steps)
 """
-import json
 from typing import List
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from docopt import docopt
 
 from wildspitz_webcam_scraper.scraper.request import create_url, ThreadedFetcher
-
-
-ROOT: Path = Path(__file__).parent
-
-with open(ROOT / 'webcams.json', mode='r', encoding='UTF-8') as webcam_json:
-    WEBCAMS = json.load(webcam_json)
-
-QUALITIES = ['full', 'default', 'half', 'quarter', 'eight']
+from wildspitz_webcam_scraper.constants import WEBCAMS, QUALITIES
 
 
 def main():
