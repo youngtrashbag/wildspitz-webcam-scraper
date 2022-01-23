@@ -255,3 +255,5 @@ cython_debug/
 # image folders
 202*-*/
 
+# maletgo file
+roundshot.com_maltego.mtgl

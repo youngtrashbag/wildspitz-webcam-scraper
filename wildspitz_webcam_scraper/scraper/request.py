@@ -15,7 +15,14 @@ def create_url(pre_url: str, dt: datetime, quality: str):
 
     # stitching the url together
     # of course, we also want the highest resolution
-    full_url = f'{pre_url}/{date_fragment}/{time_fragment}/{date_fragment}-{time_fragment}_{quality}.jpg'
+    full_url = '{}/{}/{}/{}-{}_{}.jpg'.format(
+        pre_url,
+        date_fragment,
+        time_fragment,
+        date_fragment,
+        time_fragment,
+        quality
+    )
 
     return full_url
 
@@ -29,38 +36,35 @@ class ThreadedFetcher(Thread):
         self.quality = self.url.split('/')[-1].split('_')[-1].split('.')[0]
 
     def run(self) -> None:
-        # path = Path(f'{self.time.year}-{self.time.month}') / Path(
-        #     str(self.time.day) / Path(self.webcam)
-        # )
         path = Path(
-            '{}/{}-{}/{}/{}'.format(
-                self.quality,
+            '{}-{}/{}'.format(
                 self.time.year,
                 self.time.month,
                 self.time.day,
-                self.webcam,
             )
         )
         os.makedirs(path, exist_ok=True)
 
         try:
-            img_path = path / Path(f'{self.time.hour:02}-{self.time.minute:02}.jpg')
+            img_path = path / Path(f'{self.time.hour:02}-{self.time.minute:02}_{self.webcam}-{self.quality}.jpg')
             if os.path.exists(img_path):
-                print('Skip {} (Already existed)'.format(img_path))
+                print('Skip {} (Already exist)'.format(img_path))
             else:
                 headers = dict()
-                headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                headers['User-Agent'] += 'AppleWebKit/537.36 (KHTML, like Gecko) '
-                headers['User-Agent'] += 'Chrome/96.0.4664.110 Safari/537.36'
+                headers['User-Agent'] = '{} {} {}'.format(
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                    'AppleWebKit/537.36 (KHTML, like Gecko)',
+                    'Chrome/96.0.4664.110 Safari/537.36',
+                )
 
                 response = get(self.url, stream=True, headers=headers)
                 if response.status_code == 200:
-                    print(f'Saving Image from {self.time} under {path}.')
+                    print(f'Saving Image from {self.time} under {path}')
 
                     with open(img_path, mode='wb') as img:
                         copyfileobj(response.raw, img)
 
-                    print(f'Successfully saved Image as \'{img_path}\'.')
+                    print(f'Successfully saved Image in "{img_path}"')
                 else:
                     print(
                         'Could not fetch {} (status code: {})'.format(
